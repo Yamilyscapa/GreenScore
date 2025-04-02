@@ -4,11 +4,12 @@ struct CustomButton: View {
     
     var buttonText: String
     var isSmall = false
+    var handler: (() -> Void)?
     
     var body: some View {
         VStack {
             Button(action: {
-            
+                handler?()
             }) {
                 Text(buttonText)
             }

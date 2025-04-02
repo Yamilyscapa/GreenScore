@@ -1,11 +1,3 @@
-//
-//  ChallengeCard.swift
-//  GreenScore
-//
-//  Created by Yamil Yscapa on 02/04/25.
-//
-
-
 import SwiftUI
 
 struct ChallengeCard: View {
@@ -14,7 +6,7 @@ struct ChallengeCard: View {
     @State private var showDetails = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {  // Base 8 spacing
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text(challenge.title)
                     .font(.headline)
@@ -23,16 +15,16 @@ struct ChallengeCard: View {
                 Spacer()
 
                 Text("\(challenge.points) points")
-                    .font(.subheadline)
-                    .foregroundColor(.green)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(Color("MainColor"))
             }
 
             ProgressView(value: challenge.progress, total: 1)
-                .progressViewStyle(LinearProgressViewStyle(tint: Color.green))
+                .progressViewStyle(LinearProgressViewStyle(tint: Color("MainColor")))
 
-            RoundedRectangle(cornerRadius: 8)  // Base 8
+            RoundedRectangle(cornerRadius: 8)
                 .fill(Color.gray.opacity(0.3))
-                .frame(height: 96)  // Base 8: 12 * 8
+                .frame(height: 96)
 
             Text(challenge.description)
                 .font(.subheadline)
@@ -41,28 +33,20 @@ struct ChallengeCard: View {
             if challenge.isCompleted {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color("MainColor"))
                     Text("Completed")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color("MainColor"))
                         .fontWeight(.medium)
                 }
             } else {
-                Button(action: {
+                CustomButton(buttonText: "Start challenge", handler: {
                     showDetails = true
-                }) {
-                    Text("Start challenge")
-                        .foregroundColor(.white)
-                        .padding(.vertical, 8)  // Base 8
-                        .padding(.horizontal, 16)  // Base 8: 2 * 8
-                        .background(Color("MainColor"))
-                        .cornerRadius(16)  // Base 8: 2 * 8
-                }
+                })
             }
         }
-        .padding(16)  // Base 8: 2 * 8
+        .padding(16)
         .background(Color.white)
-        .cornerRadius(16)  // Base 8: 2 * 8
-        .shadow(radius: 4)  // Half of 8
+        .cornerRadius(16)
         .sheet(isPresented: $showDetails) {
             ChallengeDetailView(
                 challenge: challenge,
