@@ -14,7 +14,14 @@ struct LogView: View {
     ]
 
     var body: some View {
-        VStack {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Log actions")
+                    .font(.title)
+                    .fontWeight(.bold)
+                Spacer()
+            }.padding(.top, 16).padding(.leading, 30)
+
             Spacer()
             LazyVGrid(
                 columns: Array(
@@ -50,13 +57,21 @@ struct LogView: View {
             .padding(.horizontal, 24)
             Spacer()
             // Campo de texto + botón al lado derecho
-            HStack {
-                TextField(
-                    "Describe your sustainable action...", text: $userAction
-                )
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Register daily actions").foregroundColor(.gray)
+                    TextEditor(
+                        text: $userAction
+                    )
+                    .background(Color(.gray))
+                    .frame(height: 45)
+                    .padding()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(.gray, lineWidth: 4).opacity(0.25)
+                    )
+                    .cornerRadius(12)
+                }
                 Button {
                     classifyHabit(phrase: userAction)
                 } label: {
