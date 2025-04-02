@@ -13,72 +13,6 @@ struct Challenge: Identifiable {
     let duration: String
 }
 
-// Single challenge component
-struct ChallengeCardView: View {
-    var challenge: Challenge
-    var onStart: () -> Void
-    @State private var showDetails = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {  // Base 8 spacing
-            HStack {
-                Text(challenge.title)
-                    .font(.headline)
-                    .bold()
-
-                Spacer()
-
-                Text("\(challenge.points) points")
-                    .font(.subheadline)
-                    .foregroundColor(.green)
-            }
-
-            ProgressView(value: challenge.progress, total: 1)
-                .progressViewStyle(LinearProgressViewStyle(tint: Color.green))
-
-            RoundedRectangle(cornerRadius: 8)  // Base 8
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 96)  // Base 8: 12 * 8
-
-            Text(challenge.description)
-                .font(.subheadline)
-                .foregroundColor(.primary)
-
-            if challenge.isCompleted {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Completed")
-                        .foregroundColor(.green)
-                        .fontWeight(.medium)
-                }
-            } else {
-                Button(action: {
-                    showDetails = true
-                }) {
-                    Text("Start challenge")
-                        .foregroundColor(.white)
-                        .padding(.vertical, 8)  // Base 8
-                        .padding(.horizontal, 16)  // Base 8: 2 * 8
-                        .background(Color("MainColor"))
-                        .cornerRadius(16)  // Base 8: 2 * 8
-                }
-            }
-        }
-        .padding(16)  // Base 8: 2 * 8
-        .background(Color.white)
-        .cornerRadius(16)  // Base 8: 2 * 8
-        .shadow(radius: 4)  // Half of 8
-        .sheet(isPresented: $showDetails) {
-            ChallengeDetailView(
-                challenge: challenge,
-                isPresented: $showDetails,
-                onConfirm: onStart
-            )
-        }
-    }
-}
-
 // Detail view for a challenge with confirmation button
 struct ChallengeDetailView: View {
     var challenge: Challenge
@@ -89,8 +23,7 @@ struct ChallengeDetailView: View {
     @State private var showConfirmation = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {  // Base 8: 2 * 8
-            // Drag indicator
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Spacer()
                 RoundedRectangle(cornerRadius: 2)
@@ -98,8 +31,8 @@ struct ChallengeDetailView: View {
                     .frame(width: 40, height: 4)
                 Spacer()
             }
-            .padding(.top, 8)  // Base 8
-            .padding(.bottom, 8)  // Base 8
+            .padding(.top, 8)
+            .padding(.bottom, 8)
             .contentShape(Rectangle())
             .onTapGesture {
                 isPresented = false
@@ -111,46 +44,45 @@ struct ChallengeDetailView: View {
 
             Text(challenge.description)
                 .font(.body)
-                .padding(.bottom, 8)  // Base 8
-
-            // Challenge details content
-            VStack(alignment: .leading, spacing: 16) {  // Base 8: 2 * 8
+                .padding(.bottom, 8)
+            
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Image(systemName: "leaf.fill")
-                        .foregroundColor(.green)
-                        .frame(width: 24)  // Base 8: 3 * 8
+                        .foregroundColor(Color("MainColor"))
+                        .frame(width: 24)
                     Text("Potential impact: \(challenge.impactDescription)")
                 }
 
                 HStack {
                     Image(systemName: "clock.fill")
                         .foregroundColor(.blue)
-                        .frame(width: 24)  // Base 8: 3 * 8
+                        .frame(width: 24)
                     Text("Duration: \(challenge.duration)")
                 }
 
                 HStack {
                     Image(systemName: "trophy.fill")
                         .foregroundColor(.yellow)
-                        .frame(width: 24)  // Base 8: 3 * 8
+                        .frame(width: 24)
                     Text("Reward: \(challenge.points) points")
                 }
             }
-            .padding(.bottom, 24)  // Base 8: 3 * 8
+            .padding(.bottom, 24)
 
             // Confirmation button
             if showConfirmation {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color("MainColor"))
                     Text("Challenge accepted!")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color("MainColor"))
                         .fontWeight(.medium)
                 }
-                .padding(16)  // Base 8: 2 * 8
+                .padding(16)
                 .frame(maxWidth: .infinity)
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(8)  // Base 8
+                .background(Color("MainColor").opacity(0.1))
+                .cornerRadius(8)
                 .onAppear {
                     // Auto-dismiss after showing confirmation
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -158,7 +90,7 @@ struct ChallengeDetailView: View {
                     }
                 }
             } else {
-                Button(action: {
+                CustomButton(buttonText: "Start challenge" , handler: {
                     // Call the onConfirm callback first
                     onConfirm()
 
@@ -170,23 +102,12 @@ struct ChallengeDetailView: View {
                     // Haptic feedback
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
-                }) {
-                    Text("Start challenge")
-                        .foregroundColor(.white)
-                        .padding(.vertical, 16)  // Base 8: 2 * 8
-                        .frame(maxWidth: .infinity)
-                        .background(Color("MainColor"))
-                        .cornerRadius(24)  // Base 8: 3 * 8
-                        .shadow(
-                            color: Color.green.opacity(0.3), radius: 4, x: 0,
-                            y: 2)
-                }
+                })
             }
 
             Spacer()
         }
-        .padding(16)  // Base 8: 2 * 8
-        .background(Color(UIColor.systemBackground))
+        .padding(16)
         .gesture(
             DragGesture()
                 .onChanged { gesture in
@@ -196,7 +117,7 @@ struct ChallengeDetailView: View {
                     }
                 }
                 .onEnded { gesture in
-                    // If dragged more than 96 points down, dismiss (Base 8: 12 * 8)
+                    // If dragged more than 96 points down, dismiss
                     if gesture.translation.height > 96 {
                         isPresented = false
                     }
@@ -204,7 +125,7 @@ struct ChallengeDetailView: View {
                 }
         )
         // Apply a small offset during drag for visual feedback
-        .offset(y: min(dragOffset.height * 0.3, 96))  // Base 8: 12 * 8
+        .offset(y: min(dragOffset.height * 0.3, 96))
         // Add animation for smooth effect
         .animation(.spring(), value: dragOffset)
     }
@@ -260,14 +181,14 @@ struct ChallengesView: View {
 
                         Text("points")
                             .font(.subheadline)
-                            .foregroundColor(.green)
+                            .foregroundColor(Color("MainColor"))
                     }
                 }
                 .padding(.horizontal, 16)  // Base 8: 2 * 8
 
                 // Challenge cards
                 ForEach(0..<challenges.count, id: \.self) { index in
-                    ChallengeCardView(
+                    ChallengeCard(
                         challenge: challenges[index],
                         onStart: {
                             // Mark as active
@@ -289,7 +210,6 @@ struct ChallengesView: View {
             }
             .padding(16)  // Base 8: 2 * 8
         }
-        .background(Color(UIColor.systemGroupedBackground))
         .tabItem {
             Image(systemName: "trophy.fill")
             Text("Challenges")

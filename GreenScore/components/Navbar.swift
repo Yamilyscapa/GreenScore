@@ -28,12 +28,12 @@ struct Navbar: View {
                     NavbarTab(iconName: "trophy.fill")
                     Text("Challenges")
                 }
-            ProfileView()
+            LogView()
                 .tabItem {
                     NavbarTab(iconName: "plus.app.fill")
                     Text("Log")
                 }
-            LogActionView()
+            ProfileView()
                 .tabItem {
                     NavbarTab(iconName: "person.fill")
                     Text("Profile")

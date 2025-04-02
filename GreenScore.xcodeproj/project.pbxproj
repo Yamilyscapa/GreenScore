@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D949C0D12D9D8FD2000F49BB /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949C0CF2D9D8FCE000F49BB /* ChallengesView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D949C0A32D9CA4BB000F49BB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		D949C0922D9CA4BA000F49BB /* GreenScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GreenScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D949C0A22D9CA4BB000F49BB /* GreenScoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GreenScoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D949C0AC2D9CA4BB000F49BB /* GreenScoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GreenScoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D949C0CF2D9D8FCE000F49BB /* ChallengesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +84,7 @@
 				D949C0A52D9CA4BB000F49BB /* GreenScoreTests */,
 				D949C0AF2D9CA4BB000F49BB /* GreenScoreUITests */,
 				D949C0932D9CA4BA000F49BB /* Products */,
+				D949C0CF2D9D8FCE000F49BB /* ChallengesView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -236,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D949C0D12D9D8FD2000F49BB /* ChallengesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
