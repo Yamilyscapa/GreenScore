@@ -8,12 +8,87 @@
 import SwiftUI
 
 struct HomeView: View {
-    var body: some View {
-        VStack {
-            Text("Home").font(.system(size: 20, weight: .bold))
-            CustomButton(buttonText: "Log", isSmall: true)
-            CustomButton(buttonText: "Click me")
 
+    var streak: Int = 10
+
+    var body: some View {
+        VStack() {
+            HStack {
+                ViewTitle(streak: streak).padding(.leading, 46)
+                Spacer()
+            }.padding(.top, 100)
+            CircularProgressBar(progress: 0.25).padding(.vertical, 40)
+            
+            VStack() {
+                Text("Progress")
+                    .font(
+                        .system(
+                            size: 24,
+                            weight: .medium)
+                    )
+                ProgressCard(category: "Water",  color: .blue, icon: "drop.fill")
+                ProgressCard(category: "Energy",  color: .yellow, icon: "bolt.fill")
+                ProgressCard(category: "Transportat",  color: .red, icon: "car.fill", isLarge: true)
+                ProgressCard(category: "Waste",  color: .green, icon: "trash.fill", isLarge: true)
+            }.padding(.top, 40)
         }
     }
+    
+    struct ProgressCard: View {
+        var category: String
+        var color: Color
+        var icon: String
+        var isLarge: Bool = false
+        
+        var body: some View {
+            HStack(alignment: .center) {
+                Image(systemName: icon)
+                    .resizable()
+                    .foregroundColor(.white)
+                    .frame(width: isLarge ? 23 : 20, height: isLarge ? 22 : 30)
+                    .frame(width: 60, height: 60)
+                    .background(color)
+                    .cornerRadius(100)
+                    .scaledToFit()
+                VStack {
+                    Text(category)
+                        .font(.system(size: 20, weight: .semibold))
+                }.padding(.leading, 10)
+                Spacer()
+            }.frame(width: 300, height: 90).padding(.horizontal, 30)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(.gray, lineWidth: 4).opacity(0.25)
+                )
+                .cornerRadius(12)
+        }
+    }
+
+        
+    
+    struct ViewTitle: View {
+
+        var streak: Int
+
+        var body: some View {
+            HStack {
+                Text("Streak -")
+                    .font(
+                        .system(
+                            size: 24,
+                            weight: .bold)
+                    )
+                Text("\(streak) days")
+                    .font(
+                        .system(
+                            size: 24,
+                            weight: .bold)
+                    ).foregroundStyle(Color("MainColor"))
+            }
+        }
+    }
+}
+
+#Preview {
+    HomeView()
 }
