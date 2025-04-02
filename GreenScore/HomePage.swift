@@ -9,6 +9,11 @@ import SwiftUI
 
 struct HomeView: View {
     var body: some View {
-        Text("Home").font(.system(size: 20, weight: .bold))
+        VStack {
+            Text("Home").font(.system(size: 20, weight: .bold))
+            CustomButton(buttonText: "Log", isSmall: true)
+            CustomButton(buttonText: "Click me")
+
+        }
     }
 }

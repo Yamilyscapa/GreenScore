@@ -10,9 +10,9 @@ import SwiftUI
 struct Navbar: View {
     var body: some View {
         TabView {
-            HomeView()
-                .tabItem {
-                    NavbarTab(iconName: "house.fill")
+                HomeView()
+                    .tabItem {
+                        NavbarTab(iconName: "house.fill")
                 }
                 ChallengesView()
                     .tabItem {
