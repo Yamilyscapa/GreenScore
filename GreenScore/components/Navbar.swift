@@ -28,7 +28,7 @@ struct Navbar: View {
                     NavbarTab(iconName: "trophy.fill")
                     Text("Challenges")
                 }
-            LogActionView()
+            LogView()
                 .tabItem {
                     NavbarTab(iconName: "plus.app.fill")
                     Text("Log")
