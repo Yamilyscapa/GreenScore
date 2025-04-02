@@ -12,26 +12,30 @@ struct HomeView: View {
     var streak: Int = 10
 
     var body: some View {
-        VStack() {
+        ScrollView() {
             HStack {
-                ViewTitle(streak: streak).padding(.leading, 46)
+                ViewTitle(streak: streak).padding(.leading, 24)
                 Spacer()
-            }.padding(.top, 100)
+            }
             CircularProgressBar(progress: 0.25).padding(.vertical, 40)
             
             VStack() {
-                Text("Progress")
-                    .font(
-                        .system(
-                            size: 24,
-                            weight: .medium)
-                    )
+                HStack {
+                    Text("Progress")
+                        .font(
+                            .system(
+                                size: 24,
+                                weight: .medium)
+                        ).padding(.leading, 24)
+                    Spacer()
+                }.padding(.bottom, 24)
+                
                 ProgressCard(category: "Water",  color: .blue, icon: "drop.fill")
                 ProgressCard(category: "Energy",  color: .yellow, icon: "bolt.fill")
                 ProgressCard(category: "Transportat",  color: .red, icon: "car.fill", isLarge: true)
                 ProgressCard(category: "Waste",  color: .green, icon: "trash.fill", isLarge: true)
-            }.padding(.top, 40)
-        }
+            }.padding(.top, 40).padding(.bottom, 80)
+        }.padding(.top, 50)
     }
     
     struct ProgressCard: View {
