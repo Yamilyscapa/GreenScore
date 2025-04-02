@@ -8,48 +8,52 @@
 import SwiftUI
 
 struct Navbar: View {
+
+    init() {
+        let appearance = UITabBarAppearance()
+        appearance.backgroundColor = UIColor.white
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         TabView {
-                HomeView()
-                    .tabItem {
-                        NavbarTab(iconName: "house.fill")
+            HomeView()
+                .tabItem {
+                    NavbarTab(iconName: "house.fill")
+                    Text("Home")
                 }
-                ChallengesView()
-                    .tabItem {
-                        NavbarTab(iconName: "trophy.fill")
-                    }
-                ProfileView()
-                    .tabItem {
-                        NavbarTab(iconName: "plus.app.fill")
-                    }
-                LogActionView()
-                    .tabItem {
-                        NavbarTab(iconName: "person.fill")
-                    }
-            }.accentColor(Color("MainColor"))
-            .frame(maxWidth: .infinity)
-                .overlay(
-                    Rectangle()
-                        .frame(height: 2)
-                        .foregroundColor(.gray).opacity(0.25),
-                    alignment: .top
-                ).padding(.horizontal, 20)
+            ChallengesView()
+                .tabItem {
+                    NavbarTab(iconName: "trophy.fill")
+                    Text("Challenges")
+                }
+            ProfileView()
+                .tabItem {
+                    NavbarTab(iconName: "plus.app.fill")
+                    Text("Log")
+                }
+            LogActionView()
+                .tabItem {
+                    NavbarTab(iconName: "person.fill")
+                    Text("Profile")
+                }
+
+        }
+        .accentColor(Color("MainColor"))
     }
-    }
+}
 
 // Navigation tabs
 struct NavbarTab: View {
-    
     var iconName: String
-    
+
     var body: some View {
-        Button(action: {}) {
-            Image(systemName: iconName)
-                .resizable()
-                .foregroundColor(.gray)
-                .frame(width: 30, height: 30)
-                .scaledToFit()
-                .frame(width: 60, height: 60)
-        }
+        Image(systemName: iconName).imageScale(.large)
+
     }
+}
+
+#Preview {
+    Navbar()
 }
