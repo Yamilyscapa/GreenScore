@@ -18,10 +18,9 @@ struct ChallengeCard: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(Color("MainColor"))
             }
-
-            ProgressView(value: challenge.progress, total: 1)
-                .progressViewStyle(LinearProgressViewStyle(tint: Color("MainColor")))
-
+            
+            LinearProgressBar(progress: challenge.progress)
+            
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 96)
