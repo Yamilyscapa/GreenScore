@@ -54,6 +54,9 @@ struct ActionAnalyzer {
             saveToHistory(text, result: result)
             if let emissions = emissions {
                 saveEmissions(for: topLabel, value: emissions)
+                // Aquí se calcula el porcentaje basado en las emisiones por categoría
+                let emissionPercentage = (emissions ?? 0.0) * 100 // Calcula el porcentaje según la cantidad de emisiones
+                result += "\nPercentage of CO₂: \(Int(emissionPercentage))%"
             }
             completion(result)
         }.resume()
@@ -64,6 +67,7 @@ struct ActionAnalyzer {
 
         switch category {
         case "transport":
+            var emission: Double = 0.0  // Inicialización de las emisiones en 0
             let pattern = #"(\d+(\.\d+)?)\s?(km|kilometers|kilometres)"#
             let regex = try? NSRegularExpression(pattern: pattern)
             let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
@@ -71,21 +75,24 @@ struct ActionAnalyzer {
             guard let match = match,
                   let range = Range(match.range(at: 1), in: lowercased),
                   let distance = Double(lowercased[range]) else {
-                return nil
+                return ("0.00 kg CO₂", emission)  // Si no se encuentra información, retorna 0
             }
 
             if lowercased.contains("car") {
-                let emission = distance * 0.2
-                return (String(format: "%.2f kg CO₂", emission), emission)
+                // CAR
+                emission = distance * 0.025
             } else if lowercased.contains("bus") {
-                let emission = distance * 0.1
-                return (String(format: "%.2f kg CO₂", emission), emission)
+                // BUS
+                emission = distance * 0.05
             } else if lowercased.contains("plane") || lowercased.contains("flight") {
-                let emission = distance * 0.25
-                return (String(format: "%.2f kg CO₂", emission), emission)
+                // PLANE
+                emission = distance * 0.08
             } else if lowercased.contains("bike") || lowercased.contains("walk") {
-                return ("0.00 kg CO₂", 0.0)
+                // BIKE
+                emission = 0.0
             }
+
+            return (String(format: "%.2f kg CO₂", emission), emission)
 
         case "water":
             var emission: Double = 0.0
@@ -120,6 +127,15 @@ struct ActionAnalyzer {
             if lowercased.contains("heater") || lowercased.contains("heating") {
                 emission += 0.8
             }
+            if lowercased.contains("light bulb") || lowercased.contains("lightbulb") {
+                emission += 0.5
+            }
+            if lowercased.contains("tv") || lowercased.contains("television") {
+                emission += 1.5
+            }
+            if lowercased.contains("computer") || lowercased.contains("laptop") || lowercased.contains("desktop") {
+                emission += 0.3
+            }
 
             return emission > 0 ? (String(format: "%.2f kWh", emission), emission) : nil
 
@@ -144,6 +160,7 @@ struct ActionAnalyzer {
         default:
             return nil
         }
+        
         return nil
     }
 
@@ -173,6 +190,7 @@ struct ActionAnalyzer {
         for category in categories {
             result[category] = getEmissions(for: category)
         }
+ 
         return result
     }
 }

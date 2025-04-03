@@ -1,5 +1,5 @@
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct LogView: View {
     @State private var userAction = ""
@@ -75,6 +75,7 @@ struct LogView: View {
                 }
                 Button {
                     classifyHabit(phrase: userAction)
+                    print(ActionAnalyzer.getAllEmissions())
                 } label: {
                     if isLoading {
                         ProgressView()
