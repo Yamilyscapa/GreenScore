@@ -12,6 +12,6 @@ struct LinearProgressBar: View {
     
     var body: some View {
         ProgressView(value: progress, total: 1)
-            .progressViewStyle(LinearProgressViewStyle(tint: progress > 60 ? Color("MainColor") : .red))
+            .progressViewStyle(LinearProgressViewStyle(tint: progress < 60 ? Color("MainColor") : .red))
     }
 }

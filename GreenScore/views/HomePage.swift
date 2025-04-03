@@ -18,7 +18,8 @@ struct HomeView: View {
                 ViewTitle().padding(.leading, 24)
                 Spacer()
             }
-            CircularProgressBar().padding(.vertical, 40)
+            CircularProgressBar(progress: FootprintModel.first?.total ?? 0.00)
+                .padding(.vertical, 40)
 
             VStack {
                 HStack {
@@ -46,13 +47,7 @@ struct HomeView: View {
                     isLarge: true,
                     percentage: FootprintModel.first?.waste ?? 0.0)
             }.padding(.top, 40).padding(.bottom, 80)
-        }.padding(.top, 50).onAppear {
-            // FOOTPRINT DATA ORIGIN
-            context.insert(
-                Footprint(
-                    energy: 0.00, transport: 0.0, waste: 0.0,
-                    water: 0.0))
-        }
+        }.padding(.top, 50)
     }
 
     struct ProgressCard: View {
@@ -82,7 +77,7 @@ struct HomeView: View {
                                 .font(.system(size: 20, weight: .semibold))
                             Spacer()
                         }
-                        
+
                         LinearProgressBar(progress: percentage)
 
                     }.padding(.leading, 10)
@@ -122,6 +117,7 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView().modelContainer(for: Streak.self, inMemory: true).modelContainer(for: Footprint.self, inMemory: true)
+    HomeView().modelContainer(for: Streak.self, inMemory: true).modelContainer(
+        for: Footprint.self, inMemory: true)
 
 }

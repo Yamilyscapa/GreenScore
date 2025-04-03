@@ -55,7 +55,7 @@ struct ActionAnalyzer {
             if let emissions = emissions {
                 saveEmissions(for: topLabel, value: emissions)
                 // Aquí se calcula el porcentaje basado en las emisiones por categoría
-                let emissionPercentage = (emissions ?? 0.0) * 100 // Calcula el porcentaje según la cantidad de emisiones
+                let emissionPercentage = (emissions ?? 0.0) // Calcula el porcentaje según la cantidad de emisiones
                 result += "\nPercentage of CO₂: \(Int(emissionPercentage))%"
             }
             completion(result)
@@ -79,16 +79,16 @@ struct ActionAnalyzer {
             }
 
             if lowercased.contains("car") {
-                // CAR
-                emission = distance * 0.025
+                // CAR: Reducción en las emisiones por kilómetro
+                emission = distance * 0.01 // Usar un valor más realista
             } else if lowercased.contains("bus") {
-                // BUS
-                emission = distance * 0.05
+                // BUS: Emisiones por persona en un autobús
+                emission = distance * 0.003 // Menor impacto por persona
             } else if lowercased.contains("plane") || lowercased.contains("flight") {
-                // PLANE
-                emission = distance * 0.08
+                // PLANE: Emisiones para vuelos comerciales
+                emission = distance * 0.1 // Usar un factor más bajo
             } else if lowercased.contains("bike") || lowercased.contains("walk") {
-                // BIKE
+                // BIKE: No genera emisiones
                 emission = 0.0
             }
 

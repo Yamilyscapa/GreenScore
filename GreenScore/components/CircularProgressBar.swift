@@ -11,14 +11,8 @@ import SwiftUI
 struct CircularProgressBar: View {
     @Environment(\.modelContext) private var context
     @Query var FootprintModel: [Footprint]
-
-    var progress: CGFloat {
-        if let firstFootprint = FootprintModel.first {
-            return firstFootprint.total
-        } else {
-            return 0.0
-        }
-    }
+    
+    var progress: CGFloat
 
     var body: some View {
 
@@ -48,14 +42,6 @@ struct CircularProgressBar: View {
 
                 Text("\(Int((FootprintModel.first?.total ?? 0) * 100))%")
                     .font(.system(size: 28, weight: .bold))
-
-                CustomButton(
-                    buttonText: "Log", isSmall: true,
-                    handler: {
-                        if let item = FootprintModel.first {
-                            item.total += 0.1
-                        }
-                    })
             }
         }
     }
