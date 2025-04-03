@@ -28,37 +28,55 @@ struct ActionAnalyzer {
 
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let labels = json["labels"] as? [String],
-                  let scores = json["scores"] as? [Double] else {
-                completion("Classification failed")
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("API Error: \(error.localizedDescription)")
+                completion("Classification error: Network issue")
                 return
             }
-
-            guard let topScore = scores.first, topScore >= 0.6 else {
-                completion("⚠️ Action not recognized")
+            
+            guard let data = data else {
+                completion("No data received")
                 return
             }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let labels = json["labels"] as? [String],
+                   let scores = json["scores"] as? [Double],
+                   !labels.isEmpty,
+                   !scores.isEmpty {
+                    
+                    guard let topScore = scores.first, topScore >= 0.5 else {
+                        completion("⚠️ Action not clearly recognized (low confidence)")
+                        return
+                    }
 
-            let topLabel = labels.first ?? "Unknown"
-            var result = "Category: \(topLabel)"
-            var emissions: Double? = nil
+                    let topLabel = labels.first ?? "Unknown"
+                    var result = "Category: \(topLabel.capitalized)"
+                    var emissions: Double? = nil
 
-            if let emissionInfo = estimateEmissions(from: text, category: topLabel) {
-                result += "\nAdding: \(emissionInfo.text)"
-                emissions = emissionInfo.value
+                    if let emissionInfo = estimateEmissions(from: text, category: topLabel) {
+                        result += "\nAdding: \(emissionInfo.text)"
+                        emissions = emissionInfo.value
+                        
+                        // Save emissions to UserDefaults
+                        saveEmissions(for: topLabel, value: emissions ?? 0)
+                        
+                        // Calculate percentage for display
+                        let emissionPercentage = calculatePercentage(for: topLabel, value: emissions ?? 0)
+                        result += "\nImpact: \(Int(emissionPercentage))%"
+                    }
+
+                    saveToHistory(text, result: result)
+                    completion(result)
+                } else {
+                    completion("Response format error")
+                }
+            } catch {
+                print("JSON Parsing Error: \(error.localizedDescription)")
+                completion("Classification error: Data parsing issue")
             }
-
-            saveToHistory(text, result: result)
-            if let emissions = emissions {
-                saveEmissions(for: topLabel, value: emissions)
-                // Aquí se calcula el porcentaje basado en las emisiones por categoría
-                let emissionPercentage = (emissions ?? 0.0) // Calcula el porcentaje según la cantidad de emisiones
-                result += "\nPercentage of CO₂: \(Int(emissionPercentage))%"
-            }
-            completion(result)
         }.resume()
     }
 
@@ -67,29 +85,54 @@ struct ActionAnalyzer {
 
         switch category {
         case "transport":
-            var emission: Double = 0.0  // Inicialización de las emisiones en 0
-            let pattern = #"(\d+(\.\d+)?)\s?(km|kilometers|kilometres)"#
+            var emission: Double = 0.0
+            // Look for distance patterns like "5km" or "10 miles"
+            let pattern = #"(\d+(\.\d+)?)\s*(km|kilometers|kilometres|miles|mi)"#
             let regex = try? NSRegularExpression(pattern: pattern)
-            let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
-
-            guard let match = match,
-                  let range = Range(match.range(at: 1), in: lowercased),
-                  let distance = Double(lowercased[range]) else {
-                return ("0.00 kg CO₂", emission)  // Si no se encuentra información, retorna 0
-            }
-
-            if lowercased.contains("car") {
-                // CAR: Reducción en las emisiones por kilómetro
-                emission = distance * 0.01 // Usar un valor más realista
-            } else if lowercased.contains("bus") {
-                // BUS: Emisiones por persona en un autobús
-                emission = distance * 0.003 // Menor impacto por persona
-            } else if lowercased.contains("plane") || lowercased.contains("flight") {
-                // PLANE: Emisiones para vuelos comerciales
-                emission = distance * 0.1 // Usar un factor más bajo
-            } else if lowercased.contains("bike") || lowercased.contains("walk") {
-                // BIKE: No genera emisiones
-                emission = 0.0
+            
+            if let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased)),
+               let range = Range(match.range(at: 1), in: lowercased),
+               let distanceValue = Double(lowercased[range]),
+               let unitRange = Range(match.range(at: 3), in: lowercased) {
+                
+                let unit = String(lowercased[unitRange])
+                var distance = distanceValue
+                
+                // Convert miles to kilometers if needed
+                if unit.contains("mi") {
+                    distance *= 1.60934 // Miles to kilometers conversion
+                }
+                
+                if lowercased.contains("car") || lowercased.contains("drove") {
+                    // Average car emissions: ~120g CO2 per km
+                    emission = distance * 0.12
+                } else if lowercased.contains("bus") {
+                    // Bus emissions per passenger: ~30g CO2 per km
+                    emission = distance * 0.03
+                } else if lowercased.contains("plane") || lowercased.contains("flight") {
+                    // Plane emissions per passenger: ~150g CO2 per km
+                    emission = distance * 0.15
+                } else if lowercased.contains("train") || lowercased.contains("subway") {
+                    // Train emissions per passenger: ~20g CO2 per km
+                    emission = distance * 0.02
+                } else if lowercased.contains("bike") || lowercased.contains("walk") || lowercased.contains("ran") {
+                    // Zero emissions for walking/biking
+                    emission = 0.0
+                } else {
+                    // Default to car if transportation mode not specified
+                    emission = distance * 0.12
+                }
+            } else {
+                // If no specific distance found, estimate based on typical trip
+                if lowercased.contains("car") || lowercased.contains("drove") {
+                    emission = 1.2 // Assuming ~10km car trip
+                } else if lowercased.contains("bus") {
+                    emission = 0.3 // Assuming ~10km bus trip
+                } else if lowercased.contains("plane") || lowercased.contains("flight") {
+                    emission = 15.0 // Assuming short flight
+                } else if lowercased.contains("bike") || lowercased.contains("walk") || lowercased.contains("ran") {
+                    emission = 0.0
+                }
             }
 
             return (String(format: "%.2f kg CO₂", emission), emission)
@@ -97,78 +140,163 @@ struct ActionAnalyzer {
         case "water":
             var emission: Double = 0.0
 
-            if lowercased.contains("shower") || lowercased.contains("bathed") || lowercased.contains("took a bath") {
-                emission += 1.5
+            if lowercased.contains("shower") {
+                emission += 35.0 // Average shower ~35 liters
+                if lowercased.contains("long") || lowercased.contains("hot") {
+                    emission += 15.0 // Long showers use more
+                }
             }
-            if lowercased.contains("brushed my teeth") || lowercased.contains("brushed teeth") || lowercased.contains("toothbrush") {
-                emission += 0.3
+            if lowercased.contains("bath") || lowercased.contains("bathtub") {
+                emission += 80.0 // Bath ~80 liters
             }
-            if lowercased.contains("toilet") || lowercased.contains("used the bathroom") || lowercased.contains("bathroom") {
-                emission += 0.5
+            if lowercased.contains("brushed") && (lowercased.contains("teeth") || lowercased.contains("tooth")) {
+                if lowercased.contains("tap on") || lowercased.contains("running water") {
+                    emission += 8.0 // Leaving tap running ~8 liters
+                } else {
+                    emission += 1.0 // Conserving water ~1 liter
+                }
             }
-            if lowercased.contains("washed dishes") || lowercased.contains("dishwasher") {
-                emission += 1.0
+            if lowercased.contains("toilet") || lowercased.contains("flush") {
+                emission += 6.0 // Toilet flush ~6 liters
+            }
+            if lowercased.contains("dishes") || lowercased.contains("dishwasher") {
+                if lowercased.contains("dishwasher") {
+                    emission += 15.0 // Dishwasher ~15 liters
+                } else {
+                    emission += 30.0 // Hand washing with running water ~30 liters
+                }
+            }
+            if lowercased.contains("laundry") || lowercased.contains("washing machine") {
+                emission += 50.0 // Washing machine ~50 liters
+            }
+            
+            // If no specific activity found but water category detected
+            if emission == 0 {
+                emission = 5.0 // Default water usage estimate
             }
 
-            return emission > 0 ? (String(format: "%.2f L water", emission), emission) : nil
+            return (String(format: "%.1f liters", emission), emission)
 
         case "energy":
             var emission: Double = 0.0
 
             if lowercased.contains("air conditioning") || lowercased.contains("ac") {
-                emission += 1.2
-            }
-            if lowercased.contains("laundry") || lowercased.contains("washing") || lowercased.contains("washed clothes") {
-                emission += 1.0
-            }
-            if lowercased.contains("charging") || lowercased.contains("charged") || lowercased.contains("charged my phone") {
-                emission += 0.2
+                if lowercased.contains("hour") || lowercased.contains("hr") {
+                    let pattern = #"(\d+(\.\d+)?)\s*(hour|hr|hours|hrs)"#
+                    let regex = try? NSRegularExpression(pattern: pattern)
+                    if let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased)),
+                       let range = Range(match.range(at: 1), in: lowercased),
+                       let hours = Double(lowercased[range]) {
+                        emission += hours * 1.5 // ~1.5 kWh per hour
+                    } else {
+                        emission += 1.5 // Default 1 hour
+                    }
+                } else {
+                    emission += 1.5 // Default 1 hour
+                }
             }
             if lowercased.contains("heater") || lowercased.contains("heating") {
-                emission += 0.8
+                emission += 2.0 // ~2 kWh
             }
-            if lowercased.contains("light bulb") || lowercased.contains("lightbulb") {
-                emission += 0.5
+            if lowercased.contains("laundry") || lowercased.contains("washing machine") {
+                emission += 1.0 // ~1 kWh per load
+            }
+            if lowercased.contains("dryer") {
+                emission += 3.0 // ~3 kWh per load
+            }
+            if lowercased.contains("charging") || lowercased.contains("charged") {
+                if lowercased.contains("phone") {
+                    emission += 0.01 // ~0.01 kWh for phone
+                } else if lowercased.contains("laptop") {
+                    emission += 0.06 // ~0.06 kWh for laptop
+                } else {
+                    emission += 0.03 // Default electronic device
+                }
+            }
+            if lowercased.contains("light") || lowercased.contains("lamp") {
+                emission += 0.05 // ~0.05 kWh per light
+                
+                // Check if multiple lights mentioned
+                let pattern = #"(\d+)\s*(light|lamp|bulb)"#
+                let regex = try? NSRegularExpression(pattern: pattern)
+                if let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased)),
+                   let range = Range(match.range(at: 1), in: lowercased),
+                   let count = Int(lowercased[range]) {
+                    emission += 0.05 * Double(count - 1) // Add for additional lights
+                }
             }
             if lowercased.contains("tv") || lowercased.contains("television") {
-                emission += 1.5
+                emission += 0.1 // ~0.1 kWh per hour
             }
             if lowercased.contains("computer") || lowercased.contains("laptop") || lowercased.contains("desktop") {
-                emission += 0.3
+                emission += 0.15 // ~0.15 kWh per hour
+            }
+            
+            // If no specific activity found but energy category detected
+            if emission == 0 {
+                emission = 0.5 // Default energy usage estimate
             }
 
-            return emission > 0 ? (String(format: "%.2f kWh", emission), emission) : nil
+            return (String(format: "%.2f kWh", emission), emission)
 
         case "waste":
             var emission: Double = 0.0
 
-            if lowercased.contains("snack") || lowercased.contains("chips") || lowercased.contains("wrapper") {
-                emission += 0.1
+            if lowercased.contains("recycled") || lowercased.contains("recycling") {
+                emission -= 0.1 // Recycling reduces waste impact
             }
-            if lowercased.contains("bottle") {
-                emission += 0.2
+            if lowercased.contains("compost") {
+                emission -= 0.2 // Composting reduces waste impact
             }
-            if lowercased.contains("disposable") || lowercased.contains("plastic cup") || lowercased.contains("fork") {
-                emission += 0.3
+            if lowercased.contains("reusable") || lowercased.contains("reused") {
+                emission -= 0.15 // Reusing items reduces waste
             }
-            if lowercased.contains("appliance") || lowercased.contains("furniture") || lowercased.contains("electronic") {
-                emission += 1.5
+            if lowercased.contains("plastic") && !lowercased.contains("avoided") && !lowercased.contains("no plastic") {
+                emission += 0.03 // Plastic waste
+            }
+            if lowercased.contains("bottle") && !lowercased.contains("reusable") {
+                emission += 0.02 // Single-use bottle
+            }
+            if lowercased.contains("disposable") || lowercased.contains("single use") || lowercased.contains("single-use") {
+                emission += 0.05 // Disposable items
+            }
+            if lowercased.contains("food waste") || lowercased.contains("threw away food") {
+                emission += 0.5 // Food waste has high impact
+            }
+            if lowercased.contains("paper") && !lowercased.contains("recycled") {
+                emission += 0.01 // Paper waste
+            }
+            
+            // If just generic waste mentioned with no specifics
+            if emission == 0 && (lowercased.contains("trash") || lowercased.contains("garbage")) {
+                emission = 0.2 // Default waste estimate
             }
 
-            return emission > 0 ? (String(format: "%.2f kg waste", emission), emission) : nil
+            return (String(format: "%.2f kg waste", emission), emission)
 
         default:
-            return nil
+            return ("0.00 units", 0.0)
         }
-        
-        return nil
     }
 
     static func saveToHistory(_ input: String, result: String) {
-        let entry = "\(Date()): \(input) → \(result)"
+        let entry = "\(formattedDate()): \(input) → \(result)"
         var history = UserDefaults.standard.stringArray(forKey: "actionHistory") ?? []
         history.insert(entry, at: 0)
+        
+        // Limit history size to prevent excessive storage
+        if history.count > 100 {
+            history = Array(history.prefix(100))
+        }
+        
         UserDefaults.standard.set(history, forKey: "actionHistory")
+    }
+    
+    static func formattedDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: Date())
     }
 
     static func getHistory() -> [String] {
@@ -190,7 +318,33 @@ struct ActionAnalyzer {
         for category in categories {
             result[category] = getEmissions(for: category)
         }
- 
         return result
+    }
+    
+    static func calculatePercentage(for category: String, value: Double) -> Double {
+        // Calculate a percentage based on relative impact within category
+        switch category {
+        case "water":
+            // Water: percentage based on daily recommended usage (~150L)
+            return min(100, (value / 150.0) * 100)
+        case "energy":
+            // Energy: percentage based on average daily usage (~10kWh)
+            return min(100, (value / 10.0) * 100)
+        case "transport":
+            // Transport: percentage based on average daily carbon budget (~7kg CO2)
+            return min(100, (value / 7.0) * 100)
+        case "waste":
+            // Waste: percentage based on average daily waste (~1.5kg)
+            return min(100, (value / 1.5) * 100)
+        default:
+            return 0
+        }
+    }
+    
+    static func resetAllData() {
+        for category in categories {
+            UserDefaults.standard.removeObject(forKey: "emissions_\(category)")
+        }
+        UserDefaults.standard.removeObject(forKey: "actionHistory")
     }
 }

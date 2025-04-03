@@ -4,13 +4,13 @@ import SwiftUI
 
 struct LogView: View {
     @Environment(\.modelContext) private var context
-    @Query var FootprintModel: [Footprint]
-    @Environment(\.modelContext) private var contextt
-    @Query var streakModel: [Streak]
+    @Query var footprintModels: [Footprint]
+    @Query var streakModels: [Streak]
     @State private var userAction = ""
     @State private var detectedCategory: String?
     @State private var showAlert = false
     @State private var isLoading = false
+    @State private var isInitialized = false
 
     let categories: [(label: String, icon: String, color: Color)] = [
         ("Water", "drop.fill", .blue),
@@ -20,10 +20,10 @@ struct LogView: View {
     ]
 
     let predefinedHabits: [String: [String]] = [
-        "Water": ["Drank water", "Took a shower", "Washed dishes"],
+        "Water": ["Took a shower", "Brushed teeth", "Washed dishes"],
         "Energy": ["Turned off lights", "Used AC less", "Charged phone"],
-        "Transport": ["Carpooled", "Biked", "Walked"],
-        "Waste": ["Recycled", "Composted", "Avoided plastic"]
+        "Transport": ["Drove 5km by car", "Took bus for 10km", "Walked instead of driving"],
+        "Waste": ["Recycled plastic", "Used reusable bottle", "Composted food waste"]
     ]
     
     var body: some View {
@@ -77,23 +77,13 @@ struct LogView: View {
                     )
                     .cornerRadius(12)
                 }.onAppear {
-                    // FOOTPRINT DATA ORIGIN
-                    context.insert(
-                        Footprint(
-                            energy: 0.00, transport: 0.0, waste: 0.0,
-                            water: 0.0))
+                    // Initialize Footprint model only once if needed
+                    initializeFootprintIfNeeded()
                 }
                 Button(action: {
-                    guard !isLoading else { return }  // No ejecutar si ya está en proceso de carga
+                    guard !isLoading && !userAction.isEmpty else { return }
                     isLoading = true
                     classifyHabit(phrase: userAction)
-
-                    let actions = ActionAnalyzer.getAllEmissions()
-                    
-                    actions.forEach { item in
-                        accumulateValues(item: item)  // Call the updated accumulation function with item
-                    }
-
                 }) {
                     if isLoading {
                         ProgressView()
@@ -123,6 +113,23 @@ struct LogView: View {
         }
     }
 
+    func initializeFootprintIfNeeded() {
+        // Check if we already have a Footprint object
+        if footprintModels.isEmpty {
+            // Only create a new one if none exists
+            context.insert(
+                Footprint(
+                    energy: 0.0, transport: 0.0, waste: 0.0,
+                    water: 0.0)
+            )
+        }
+        
+        // Similarly for Streak if needed
+        if streakModels.isEmpty {
+            context.insert(Streak(days: 0))
+        }
+    }
+
     func getAPIKey(named keyName: String) -> String {
         if let path = Bundle.main.path(forResource: "Keys", ofType: "plist"),
             let dict = NSDictionary(contentsOfFile: path),
@@ -134,44 +141,66 @@ struct LogView: View {
     }
 
     func classifyHabit(phrase: String) {
-        isLoading = true
         let token = getAPIKey(named: "HF_API_TOKEN")
 
         ActionAnalyzer.classifyAction(phrase, apiKey: token) { result in
             DispatchQueue.main.async {
-                isLoading = false
-                detectedCategory = result
-                showAlert = true
-                userAction = ""
+                self.detectedCategory = result
+                self.showAlert = true
+                
+                // Get emissions data after classification
+                let emissionsData = ActionAnalyzer.getAllEmissions()
+                
+                // Update Footprint with actual emissions data
+                self.updateFootprintModel(with: emissionsData)
+                
+                self.userAction = ""
+                self.isLoading = false
             }
         }
     }
     
-    func accumulateValues(item: (key: String, value: Double)) {
-        if let foo = FootprintModel.first {
-            // Accumulating values without overwriting
-            let value = item.value / 100  // Ensure proper scaling of the value
-            
-            if item.key == "energy" {
-                foo.energy += value  // Accumulating energy
-            } else if item.key == "water" {
-                foo.water += value  // Accumulating water
-            } else if item.key == "transport" {
-                foo.transport += value / 125000  // Accumulating transport
-                foo.total += value / 125000  // Accumulating transport in total
-            } else if item.key == "waste" {
-                foo.waste += value  // Accumulating waste
-            }
-            
-            // For all keys except "transport", accumulate the value into total
-            if item.key != "transport" {
-                foo.total += value
-            }
-        } else {
+    func updateFootprintModel(with emissionsData: [String: Double]) {
+        guard let footprint = footprintModels.first else {
             print("No FootprintModel found")
+            return
         }
-    }
-}
+        
+        // Update each category with normalized values
+        // The scaling factors ensure consistent representation across categories
+        for (category, value) in emissionsData {
+            switch category {
+            case "water":
+                // Water in liters - scale appropriately for visualization
+                footprint.water = value / 10.0 // Normalize to keep progress bars in reasonable range
+            case "energy":
+                // Energy in kWh - scale appropriately for visualization
+                footprint.energy = value / 10.0
+            case "transport":
+                // Transport in kg CO2 - normalize with appropriate factor
+                footprint.transport = value / 10.0
+            case "waste":
+                // Waste in kg - scale appropriately for visualization
+                footprint.waste = value / 10.0
+            default:
+                break
+            }
+        }
+        
+        // Calculate total environmental impact
+        // Use weighted sum of all categories for a balanced total score
+        footprint.total = CGFloat(
+            (footprint.water * 1.0) +
+            (footprint.energy * 1.2) +
+            (footprint.transport * 1.5) +
+            (footprint.waste * 1.3)
+        )
+        
+        // Update streak (assuming one action per day)
+        if let streak = streakModels.first {
+            streak.days += 1
+        }
+    }}
 
 #Preview {
     LogView()
