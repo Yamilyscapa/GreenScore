@@ -10,18 +10,15 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(\.modelContext) private var context
-    @Query var footprint: [Footprint]
+    @Query var FootprintModel: [Footprint]
 
     var body: some View {
         ScrollView {
-            ForEach(footprint) {
-                fp in Text("\(fp.energy)")
-            }
             HStack {
                 ViewTitle().padding(.leading, 24)
                 Spacer()
             }
-            CircularProgressBar(progress: 0.25).padding(.vertical, 40)
+            CircularProgressBar().padding(.vertical, 40)
 
             VStack {
                 HStack {
@@ -34,17 +31,28 @@ struct HomeView: View {
                     Spacer()
                 }.padding(.bottom, 24)
 
-                ProgressCard(category: "Water", color: .blue, icon: "drop.fill")
                 ProgressCard(
-                    category: "Energy", color: .yellow, icon: "bolt.fill")
+                    category: "Water", color: .blue, icon: "drop.fill",
+                    percentage: FootprintModel.first?.water ?? 0.0)
                 ProgressCard(
-                    category: "Transportat", color: .red, icon: "car.fill",
-                    isLarge: true)
+                    category: "Energy", color: .yellow, icon: "bolt.fill",
+                    percentage: FootprintModel.first?.energy ?? 0.0)
+                ProgressCard(
+                    category: "Transport", color: .red, icon: "car.fill",
+                    isLarge: true,
+                    percentage: FootprintModel.first?.transport ?? 0.0)
                 ProgressCard(
                     category: "Waste", color: .green, icon: "trash.fill",
-                    isLarge: true)
+                    isLarge: true,
+                    percentage: FootprintModel.first?.waste ?? 0.0)
             }.padding(.top, 40).padding(.bottom, 80)
-        }.padding(.top, 50)
+        }.padding(.top, 50).onAppear {
+            // FOOTPRINT DATA ORIGIN
+            context.insert(
+                Footprint(
+                    energy: 0.00, transport: 0.0, waste: 0.0,
+                    water: 0.0))
+        }
     }
 
     struct ProgressCard: View {
@@ -52,35 +60,48 @@ struct HomeView: View {
         var color: Color
         var icon: String
         var isLarge: Bool = false
+        var percentage: Double
 
         var body: some View {
-            HStack(alignment: .center) {
-                Image(systemName: icon)
-                    .resizable()
-                    .foregroundColor(.white)
-                    .frame(width: isLarge ? 23 : 20, height: isLarge ? 22 : 30)
-                    .frame(width: 60, height: 60)
-                    .background(color)
-                    .cornerRadius(100)
-                    .scaledToFit()
-                VStack {
-                    Text(category)
-                        .font(.system(size: 20, weight: .semibold))
-                }.padding(.leading, 10)
-                Spacer()
-            }.frame(width: 300, height: 90).padding(.horizontal, 30)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(.gray, lineWidth: 4).opacity(0.25)
-                )
-                .cornerRadius(12)
+            VStack {
+                HStack(alignment: .center) {
+
+                    Image(systemName: icon)
+                        .resizable()
+                        .foregroundColor(.white)
+                        .frame(
+                            width: isLarge ? 23 : 20, height: isLarge ? 22 : 30
+                        )
+                        .frame(width: 60, height: 60)
+                        .background(color)
+                        .cornerRadius(100)
+                        .scaledToFit()
+                    VStack {
+                        HStack {
+                            Text(category)
+                                .font(.system(size: 20, weight: .semibold))
+                            Spacer()
+                        }
+                        
+                        LinearProgressBar(progress: percentage)
+
+                    }.padding(.leading, 10)
+                    Spacer()
+
+                }.frame(width: 300, height: 90).padding(.horizontal, 30)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(.gray, lineWidth: 4).opacity(0.25)
+                    )
+                    .cornerRadius(12)
+            }
         }
     }
 
     struct ViewTitle: View {
         @Environment(\.modelContext) private var context
         @Query var streakModel: [Streak]
-        
+
         var body: some View {
             HStack {
                 Text("Streak -")
@@ -101,6 +122,6 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView().modelContainer(for: Streak.self, inMemory: true)
+    HomeView().modelContainer(for: Streak.self, inMemory: true).modelContainer(for: Footprint.self, inMemory: true)
 
 }

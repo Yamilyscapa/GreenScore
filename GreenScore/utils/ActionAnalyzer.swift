@@ -68,6 +68,27 @@ struct ActionAnalyzer {
             let regex = try? NSRegularExpression(pattern: pattern)
             let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
 
+<<<<<<< HEAD
+        guard let match = match,
+              let range = Range(match.range(at: 1), in: lowercased),
+              let distance = Double(lowercased[range]) else {
+            return nil
+        }
+
+        // Estimates the CO2 emissions dependign of the transportation method
+        if lowercased.contains("car") {
+            let emission = distance * 0.2
+            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
+        } else if lowercased.contains("bus") {
+            let emission = distance * 0.1
+            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
+        } else if lowercased.contains("plane") || lowercased.contains("flight") {
+            let emission = distance * 0.25
+            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
+        } else if lowercased.contains("bike") || lowercased.contains("walk") {
+            return ("Estimated emissions: 0.00 kg CO₂", 0.0)
+        } else {
+=======
             guard let match = match,
                   let range = Range(match.range(at: 1), in: lowercased),
                   let distance = Double(lowercased[range]) else {
@@ -142,6 +163,7 @@ struct ActionAnalyzer {
             return emission > 0 ? (String(format: "%.2f kg waste", emission), emission) : nil
 
         default:
+>>>>>>> 536db42882ab30d72993300b2a182e86ad5f4677
             return nil
         }
         return nil
