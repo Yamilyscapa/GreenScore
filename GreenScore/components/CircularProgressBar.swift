@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct CircularProgressBar: View {
+    @Environment(\.modelContext) private var context
+    @Query var footprint: [Footprint]
+    
     var progress: CGFloat
 
     var body: some View {

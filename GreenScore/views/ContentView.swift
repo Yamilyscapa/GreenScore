@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct ContentView: View {
-    
+
     var body: some View {
         VStack {
             Navbar()
         }
-    }}
+    }
+}
 
 #Preview {
-    ContentView()
+    ContentView().modelContainer(for: Footprint.self, inMemory: true)
 }

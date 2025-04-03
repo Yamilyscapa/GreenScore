@@ -5,21 +5,25 @@
 //  Created by Yamil Yscapa on 02/04/25.
 //
 
+import SwiftData
 import SwiftUI
 
 struct HomeView: View {
-
-    var streak: Int = 10
+    @Environment(\.modelContext) private var context
+    @Query var footprint: [Footprint]
 
     var body: some View {
-        ScrollView() {
+        ScrollView {
+            ForEach(footprint) {
+                fp in Text("\(fp.energy)")
+            }
             HStack {
-                ViewTitle(streak: streak).padding(.leading, 24)
+                ViewTitle().padding(.leading, 24)
                 Spacer()
             }
             CircularProgressBar(progress: 0.25).padding(.vertical, 40)
-            
-            VStack() {
+
+            VStack {
                 HStack {
                     Text("Progress")
                         .font(
@@ -29,21 +33,26 @@ struct HomeView: View {
                         ).padding(.leading, 24)
                     Spacer()
                 }.padding(.bottom, 24)
-                
-                ProgressCard(category: "Water",  color: .blue, icon: "drop.fill")
-                ProgressCard(category: "Energy",  color: .yellow, icon: "bolt.fill")
-                ProgressCard(category: "Transportat",  color: .red, icon: "car.fill", isLarge: true)
-                ProgressCard(category: "Waste",  color: .green, icon: "trash.fill", isLarge: true)
+
+                ProgressCard(category: "Water", color: .blue, icon: "drop.fill")
+                ProgressCard(
+                    category: "Energy", color: .yellow, icon: "bolt.fill")
+                ProgressCard(
+                    category: "Transportat", color: .red, icon: "car.fill",
+                    isLarge: true)
+                ProgressCard(
+                    category: "Waste", color: .green, icon: "trash.fill",
+                    isLarge: true)
             }.padding(.top, 40).padding(.bottom, 80)
         }.padding(.top, 50)
     }
-    
+
     struct ProgressCard: View {
         var category: String
         var color: Color
         var icon: String
         var isLarge: Bool = false
-        
+
         var body: some View {
             HStack(alignment: .center) {
                 Image(systemName: icon)
@@ -68,12 +77,10 @@ struct HomeView: View {
         }
     }
 
-        
-    
     struct ViewTitle: View {
-
-        var streak: Int
-
+        @Environment(\.modelContext) private var context
+        @Query var streakModel: [Streak]
+        
         var body: some View {
             HStack {
                 Text("Streak -")
@@ -82,7 +89,7 @@ struct HomeView: View {
                             size: 24,
                             weight: .bold)
                     )
-                Text("\(streak) days")
+                Text("\(streakModel.first?.days ?? 0) days")
                     .font(
                         .system(
                             size: 24,
@@ -94,5 +101,6 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    HomeView().modelContainer(for: Streak.self, inMemory: true)
+
 }

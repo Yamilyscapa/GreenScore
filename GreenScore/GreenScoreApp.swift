@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct GreenScoreApp: App {
@@ -13,5 +14,6 @@ struct GreenScoreApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: Footprint.self)
     }
 }
