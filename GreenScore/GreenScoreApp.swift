@@ -14,6 +14,6 @@ struct GreenScoreApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: Footprint.self)
+        .modelContainer(for: [Streak.self, Footprint.self], inMemory: true)
     }
 }

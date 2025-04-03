@@ -117,7 +117,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView().modelContainer(for: Streak.self, inMemory: true).modelContainer(
-        for: Footprint.self, inMemory: true)
-
+    HomeView().modelContainer(for: [Streak.self, Footprint.self])
 }
