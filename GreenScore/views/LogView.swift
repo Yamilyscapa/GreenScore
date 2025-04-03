@@ -124,8 +124,9 @@ struct LogView: View {
                 userAction = ""
             }
         }
-    }    
+    }
 }
+
 #Preview {
     LogView()
 }
