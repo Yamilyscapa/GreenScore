@@ -72,6 +72,7 @@ struct ActionAnalyzer {
             return nil
         }
 
+        // Estimates the CO2 emissions dependign of the transportation method
         if lowercased.contains("car") {
             let emission = distance * 0.2
             return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)

@@ -6,12 +6,15 @@ class Footprint {
     var transport: Double
     var waste: Double
     var water: Double
+    var total: Double
+    
 
-    init(energy: Double, transport: Double, waste: Double, water: Double) {
+    init(energy: Double, transport: Double, waste: Double, water: Double, total: Double) {
         self.energy = energy
         self.transport = transport
         self.waste = waste
         self.water = water
+        self.total = total
     }
 }
 

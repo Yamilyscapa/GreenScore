@@ -14,9 +14,6 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            ForEach(footprint) {
-                fp in Text("\(fp.energy)")
-            }
             HStack {
                 ViewTitle().padding(.leading, 24)
                 Spacer()
