@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 struct LogView: View {
     @State private var userAction = ""
@@ -112,54 +113,18 @@ struct LogView: View {
         return ""
     }
     func classifyHabit(phrase: String) {
-        guard !phrase.isEmpty else { return }
         isLoading = true
-        let url = URL(
-            string:
-                "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
-        )!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
         let token = getAPIKey(named: "HF_API_TOKEN")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let labels = [
-            "water saving",
-            "energy saving",
-            "transport",
-            "waste reduction",
-        ]
-
-        let body: [String: Any] = [
-            "inputs": phrase,
-            "parameters": ["candidate_labels": labels],
-        ]
-
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        URLSession.shared.dataTask(with: request) { data, _, _ in
+        ActionAnalyzer.classifyAction(phrase, apiKey: token) { result in
             DispatchQueue.main.async {
                 isLoading = false
-            }
-
-            guard let data = data,
-                let json = try? JSONSerialization.jsonObject(with: data)
-                    as? [String: Any],
-                let labels = json["labels"] as? [String]
-            else {
-                DispatchQueue.main.async {
-                    detectedCategory = "Classification failed"
-                    showAlert = true
-                }
-                return
-            }
-            DispatchQueue.main.async {
-                detectedCategory = labels.first ?? "Unknown"
+                detectedCategory = result
                 showAlert = true
-                userAction = ""  // opcional: limpia el campo después
+                userAction = ""
             }
-        }.resume()
-    }
+        }
+    }    
 }
 #Preview {
     LogView()
