@@ -5,16 +5,23 @@
 //  Created by Yamil Yscapa on 02/04/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CircularProgressBar: View {
     @Environment(\.modelContext) private var context
-    @Query var footprint: [Footprint]
-    
-    var progress: CGFloat
+    @Query var FootprintModel: [Footprint]
+
+    var progress: CGFloat {
+        if let firstFootprint = FootprintModel.first {
+            return firstFootprint.total
+        } else {
+            return 0.0
+        }
+    }
 
     var body: some View {
+
         HStack(spacing: 52) {
             ZStack {
                 Circle()
@@ -24,24 +31,36 @@ struct CircularProgressBar: View {
 
                 Circle()
                     .trim(from: 0.0, to: progress)
-                    .stroke(Color("MainColor"), lineWidth: 25)
+                    .stroke(
+                        progress < 0.6 ? Color("MainColor") : .red,
+                        lineWidth: 25
+                    )
                     .rotationEffect(Angle(degrees: -90))
                     .animation(.linear(duration: 1.0), value: progress)
             }
             .frame(width: 140, height: 140)
 
             VStack(alignment: .leading) {
-                Text("Reduction").font(.system(size: 16, weight: .light))
-                    .foregroundColor(.gray).padding(.bottom, 5)
+                Text("Contamination \n generated").font(
+                    .system(size: 16, weight: .light)
+                )
+                .foregroundColor(.gray).padding(.bottom, 5)
 
-                Text("25%").font(.system(size: 28, weight: .bold))
+                Text("\(Int((FootprintModel.first?.total ?? 0) * 100))%")
+                    .font(.system(size: 28, weight: .bold))
 
-                CustomButton(buttonText: "Log", isSmall: true)
+                CustomButton(
+                    buttonText: "Log", isSmall: true,
+                    handler: {
+                        if let item = FootprintModel.first {
+                            item.total += 0.1
+                        }
+                    })
             }
         }
     }
 }
 
 #Preview {
-    HomeView()
+    HomeView().modelContainer(for: Footprint.self, inMemory: true)
 }
