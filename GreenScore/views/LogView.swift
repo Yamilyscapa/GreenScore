@@ -14,6 +14,13 @@ struct LogView: View {
         ("Waste", "trash.fill", .green),
     ]
 
+    let predefinedHabits: [String: [String]] = [
+        "Water": ["Drank water", "Took a shower", "Washed dishes"],
+        "Energy": ["Turned off lights", "Used AC less", "Charged phone"],
+        "Transport": ["Carpooled", "Biked", "Walked"],
+        "Waste": ["Recycled", "Composted", "Avoided plastic"]
+    ]
+    
     var body: some View {
         VStack(spacing: 16) {
             HStack {
@@ -30,34 +37,26 @@ struct LogView: View {
                 spacing: 20
             ) {
                 ForEach(categories, id: \.label) { category in
-                    VStack(spacing: 20) {
-                        ZStack {
-                            Circle()
-                                .fill(category.color)
-                                .frame(width: 90, height: 90)
-                            Image(systemName: category.icon)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(.white)
-                        }
-                        Text(category.label)
-                            .font(.headline)
-                            .foregroundColor(.black)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .background(Color.white)
-                    .cornerRadius(20)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.gray.opacity(0.25), lineWidth: 1)
+                    CustomButton2(
+                        label: category.label,
+                        icon: category.icon,
+                        color: category.color,
+                        habits: predefinedHabits[category.label] ?? [],
+                        userAction: $userAction
                     )
                 }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
             .padding(.horizontal, 24)
+            .background(Color.white)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.gray.opacity(0.25), lineWidth: 1)
+            )
             Spacer()
-            // Campo de texto + botón al lado derecho
+    
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Register daily actions").foregroundColor(.gray)
