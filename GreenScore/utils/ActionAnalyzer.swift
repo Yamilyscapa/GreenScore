@@ -46,8 +46,8 @@ struct ActionAnalyzer {
             var result = "Category: \(topLabel)"
             var emissions: Double? = nil
 
-            if let emissionInfo = estimateEmissions(from: text) {
-                result += "\n\(emissionInfo.text)"
+            if let emissionInfo = estimateEmissions(from: text, category: topLabel) {
+                result += "\nAdding: \(emissionInfo.text)"
                 emissions = emissionInfo.value
             }
 
@@ -59,33 +59,92 @@ struct ActionAnalyzer {
         }.resume()
     }
 
-    static func estimateEmissions(from text: String) -> (text: String, value: Double)? {
+    static func estimateEmissions(from text: String, category: String) -> (text: String, value: Double)? {
         let lowercased = text.lowercased()
 
-        let pattern = #"(\d+(\.\d+)?)\s?(km|kilometers|kilometres)"#
-        let regex = try? NSRegularExpression(pattern: pattern)
-        let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
+        switch category {
+        case "transport":
+            let pattern = #"(\d+(\.\d+)?)\s?(km|kilometers|kilometres)"#
+            let regex = try? NSRegularExpression(pattern: pattern)
+            let match = regex?.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
 
-        guard let match = match,
-              let range = Range(match.range(at: 1), in: lowercased),
-              let distance = Double(lowercased[range]) else {
+            guard let match = match,
+                  let range = Range(match.range(at: 1), in: lowercased),
+                  let distance = Double(lowercased[range]) else {
+                return nil
+            }
+
+            if lowercased.contains("car") {
+                let emission = distance * 0.2
+                return (String(format: "%.2f kg CO₂", emission), emission)
+            } else if lowercased.contains("bus") {
+                let emission = distance * 0.1
+                return (String(format: "%.2f kg CO₂", emission), emission)
+            } else if lowercased.contains("plane") || lowercased.contains("flight") {
+                let emission = distance * 0.25
+                return (String(format: "%.2f kg CO₂", emission), emission)
+            } else if lowercased.contains("bike") || lowercased.contains("walk") {
+                return ("0.00 kg CO₂", 0.0)
+            }
+
+        case "water":
+            var emission: Double = 0.0
+
+            if lowercased.contains("shower") || lowercased.contains("bathed") || lowercased.contains("took a bath") {
+                emission += 1.5
+            }
+            if lowercased.contains("brushed my teeth") || lowercased.contains("brushed teeth") || lowercased.contains("toothbrush") {
+                emission += 0.3
+            }
+            if lowercased.contains("toilet") || lowercased.contains("used the bathroom") || lowercased.contains("bathroom") {
+                emission += 0.5
+            }
+            if lowercased.contains("washed dishes") || lowercased.contains("dishwasher") {
+                emission += 1.0
+            }
+
+            return emission > 0 ? (String(format: "%.2f L water", emission), emission) : nil
+
+        case "energy":
+            var emission: Double = 0.0
+
+            if lowercased.contains("air conditioning") || lowercased.contains("ac") {
+                emission += 1.2
+            }
+            if lowercased.contains("laundry") || lowercased.contains("washing") || lowercased.contains("washed clothes") {
+                emission += 1.0
+            }
+            if lowercased.contains("charging") || lowercased.contains("charged") || lowercased.contains("charged my phone") {
+                emission += 0.2
+            }
+            if lowercased.contains("heater") || lowercased.contains("heating") {
+                emission += 0.8
+            }
+
+            return emission > 0 ? (String(format: "%.2f kWh", emission), emission) : nil
+
+        case "waste":
+            var emission: Double = 0.0
+
+            if lowercased.contains("snack") || lowercased.contains("chips") || lowercased.contains("wrapper") {
+                emission += 0.1
+            }
+            if lowercased.contains("bottle") {
+                emission += 0.2
+            }
+            if lowercased.contains("disposable") || lowercased.contains("plastic cup") || lowercased.contains("fork") {
+                emission += 0.3
+            }
+            if lowercased.contains("appliance") || lowercased.contains("furniture") || lowercased.contains("electronic") {
+                emission += 1.5
+            }
+
+            return emission > 0 ? (String(format: "%.2f kg waste", emission), emission) : nil
+
+        default:
             return nil
         }
-
-        if lowercased.contains("car") {
-            let emission = distance * 0.2
-            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
-        } else if lowercased.contains("bus") {
-            let emission = distance * 0.1
-            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
-        } else if lowercased.contains("plane") || lowercased.contains("flight") {
-            let emission = distance * 0.25
-            return (String(format: "Estimated emissions: %.2f kg CO₂", emission), emission)
-        } else if lowercased.contains("bike") || lowercased.contains("walk") {
-            return ("Estimated emissions: 0.00 kg CO₂", 0.0)
-        } else {
-            return nil
-        }
+        return nil
     }
 
     static func saveToHistory(_ input: String, result: String) {
