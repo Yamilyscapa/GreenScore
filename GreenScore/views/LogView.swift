@@ -5,6 +5,8 @@ import SwiftUI
 struct LogView: View {
     @Environment(\.modelContext) private var context
     @Query var FootprintModel: [Footprint]
+    @Environment(\.modelContext) private var contextt
+    @Query var streakModel: [Streak]
     @State private var userAction = ""
     @State private var detectedCategory: String?
     @State private var showAlert = false
