@@ -3,8 +3,13 @@ import SwiftUI
 struct ContentView: View {
 
     var body: some View {
-        VStack {
-            Navbar()
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
+            NavigationStack {
+                VStack {
+                    Navbar()
+                }
+            }
         }
     }
 }

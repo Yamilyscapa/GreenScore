@@ -179,7 +179,7 @@ struct ChallengesView: View {
                             .foregroundColor(Color("MainColor"))
                             .fontWeight(.bold)
 
-                        Text("points")
+                        Text("🌱 Eco Points:")
                             .font(.subheadline)
                             .foregroundColor(Color("MainColor"))
                     }

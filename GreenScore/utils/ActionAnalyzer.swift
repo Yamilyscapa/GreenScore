@@ -55,7 +55,7 @@ struct ActionAnalyzer {
             if let emissions = emissions {
                 saveEmissions(for: topLabel, value: emissions)
                 // Aquí se calcula el porcentaje basado en las emisiones por categoría
-                let emissionPercentage = (emissions ?? 0.0) * 100 // Calcula el porcentaje según la cantidad de emisiones
+                let emissionPercentage = (emissions ?? 0.1) * 100 // Calcula el porcentaje según la cantidad de emisiones
                 result += "\nPercentage of CO₂: \(Int(emissionPercentage))%"
             }
             completion(result)
