@@ -1,1 +1,53 @@
 *.plist
+# Archivos generados por Xcode
+DerivedData/
+xcuserdata/
+*.xcscmblueprint
+*.xcworkspace
+*.xcuserstate
+
+# Caché de compilación
+.build/
+*.o
+*.d
+*.pcm
+*.xcconfig
+
+# Archivos de Logs y Reportes de Errores
+*.crash
+*.log
+*.xcactivitylog
+
+# Archivos de Swift Package Manager (SPM)
+.swiftpm/
+Package.resolved
+Packages/
+
+# Archivos de CocoaPods
+Pods/
+Podfile.lock
+
+# Archivos de Carthage
+Carthage/
+Carthage/Checkouts
+Carthage/Build/
+
+# Archivos de Fastlane (si usas Fastlane para CI/CD)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Archivos de Playgrounds
+playground.xcworkspace/
+
+# Archivos de Estado de Versiones
+*.mode1v3
+*.pbxuser
+
+# Certificados y Firmas de Xcode
+*.mobileprovision
+*.p8
+*.p12
+*.cer
+*.xcconfig
